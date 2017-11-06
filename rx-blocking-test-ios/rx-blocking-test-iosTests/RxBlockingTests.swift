@@ -1,10 +1,7 @@
 import XCTest
 import RxSwift
-import RxBlocking
-import RxTest
 
 @testable import rx_blocking_test_ios
-
 
 class RxEasyCollectorTests: XCTestCase {
 
@@ -18,7 +15,7 @@ class RxEasyCollectorTests: XCTestCase {
     var onTapped: PublishSubject<Void> = PublishSubject<Void>()
     var disposeBag: DisposeBag = DisposeBag()
 
-    func testBoolCollector() {
+    func testVariableBoolCollector() {
         let collector = RxCollector<Bool>().collect(from: isVisible.asObservable())
         isVisible.value = false
         isVisible.value = false
@@ -41,16 +38,17 @@ class RxEasyCollectorTests: XCTestCase {
 }
 
 class RxCollector<T> {
-    var disposeBag: DisposeBag = DisposeBag()
+    var deadBodies: DisposeBag = DisposeBag()
     var toArray: [T] = [T]()
 
-    func collect( from observable: Observable<T>) -> RxCollector {
+    func collect(from observable: Observable<T>) -> RxCollector {
         observable.asObservable()
-            .subscribe(onNext: { (isVisible) in
-                self.toArray.append(isVisible)
-            }).addDisposableTo(disposeBag)
+            .subscribe(onNext: { (newZombie) in
+                self.toArray.append(newZombie)
+            }).addDisposableTo(deadBodies)
         return self
     }
+
 }
 
 
