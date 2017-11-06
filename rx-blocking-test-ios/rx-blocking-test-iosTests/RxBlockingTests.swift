@@ -6,7 +6,7 @@ import RxTest
 @testable import rx_blocking_test_ios
 
 
-class RxBlockingTests: XCTestCase {
+class RxEasyCollectorTests: XCTestCase {
 
     var isVisible: Variable<Bool> = Variable<Bool>(false)
     var isHidden: Observable<Bool> = Observable<Bool>.create { observer in
@@ -18,8 +18,8 @@ class RxBlockingTests: XCTestCase {
     var onTapped: PublishSubject<Void> = PublishSubject<Void>()
     var disposeBag: DisposeBag = DisposeBag()
 
-    func testVariableBoolCollector() {
-        let collector = VariableBoolCollector().collect(from: isVisible)
+    func testBoolCollector() {
+        let collector = RxCollector<Bool>().collect(from: isVisible.asObservable())
         isVisible.value = false
         isVisible.value = false
         isVisible.value = true
@@ -27,12 +27,12 @@ class RxBlockingTests: XCTestCase {
     }
 
     func testObservableBoolCollector() {
-        let collector = ObservableBoolCollector().collect(from: isHidden)
+        let collector = RxCollector<Bool>().collect(from: isHidden)
         XCTAssertEqual(collector.toArray, [false, true])
     }
 
     func testVoidCollector() {
-        let collector = VoidCollector().collect(from: onTapped)
+        let collector = RxCollector<Void>().collect(from: onTapped.asObservable())
         onTapped.onNext(())
         onTapped.onNext(())
         onTapped.onNext(())
@@ -40,37 +40,11 @@ class RxBlockingTests: XCTestCase {
     }
 }
 
-class VoidCollector {
+class RxCollector<T> {
     var disposeBag: DisposeBag = DisposeBag()
-    var toArray: [Void] = [Void]()
+    var toArray: [T] = [T]()
 
-    func collect( from variable: PublishSubject<Void>) -> VoidCollector {
-        variable.asObservable()
-            .subscribe(onNext: { () in
-                self.toArray.append(())
-            }).addDisposableTo(disposeBag)
-        return self
-    }
-}
-
-class VariableBoolCollector {
-    var disposeBag: DisposeBag = DisposeBag()
-    var toArray: [Bool] = [Bool]()
-
-    func collect( from variable: Variable<Bool>) -> VariableBoolCollector {
-        variable.asObservable()
-            .subscribe(onNext: { (isVisible) in
-                self.toArray.append(isVisible)
-            }).addDisposableTo(disposeBag)
-        return self
-    }
-}
-
-class ObservableBoolCollector {
-    var disposeBag: DisposeBag = DisposeBag()
-    var toArray: [Bool] = [Bool]()
-
-    func collect( from observable: Observable<Bool>) -> ObservableBoolCollector {
+    func collect( from observable: Observable<T>) -> RxCollector {
         observable.asObservable()
             .subscribe(onNext: { (isVisible) in
                 self.toArray.append(isVisible)
